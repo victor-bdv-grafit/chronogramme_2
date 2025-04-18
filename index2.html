@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chronogramme</title>
+  
+  <!-- FullCalendar v6 -->
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+  
+  <!-- Day.js -->
+  <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/locale/fr.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/weekday.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/isSameOrBefore.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/isBetween.js"></script>
+  
+  <style>
+    :root {
+      --primary-color: #4f46e5;
+      --border-color: #e5e7eb;
+      --bg-color: #ffffff;
+      --text-color: #1f2937;
+      --holiday-color: rgba(254, 226, 226, 0.5);
+      --weekend-color: rgba(243, 244, 246, 0.5);
+      --vacation-color: rgba(254, 240, 138, 0.5);
+    }
+    
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+      color: var(--text-color);
+      background-color: var(--bg-color);
+    }
+    
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: var(--primary-color);
+    }
+    
+    .form-container {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 20px;
+      padding: 15px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      background-color: #f9fafb;
+      flex-wrap: wrap;
+    }
+    
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      min-width: 200px;
+      flex: 1;
+    }
+    
+    label {
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    
+    input {
+      padding: 8px;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+    }
+    
+    .calendar-container {
+      margin-bottom: 20px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      min-height: 500px;
+    }
+    
+    .summary {
+      padding: 15px;
+      background-color: #f9fafb;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-weight: bold;
+      text-align: center;
+    }
+    
+    .fc-day-today {
+      background-color: rgba(79, 70, 229, 0.1) !important;
+    }
+    
+    .fc-day-holiday {
+      background-color: var(--holiday-color) !important;
+    }
+    
+    .fc-day-weekend {
+      background-color: var(--weekend-color) !important;
+    }
+    
+    .fc-day-vacation {
+      background-color: var(--vacation-color) !important;
+    }
+    
+    .fc-event {
+      cursor: default;
+    }
+    
+    .fc .fc-toolbar-title {
+      font-size: 1.5em;
+    }
+    
+    .fc .fc-button-primary {
+      background-color: var(--primary-color);
+      border-color: var(--primary-color);
+    }
+    
+    .fc .fc-button-primary:hover {
+      background-color: #4338ca;
+      border-color: #4338ca;
+    }
+    
+    /* Style pour les boutons de navigation */
+    .fc .fc-prev-button, .fc .fc-next-button {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5em;
+      font-weight: bold;
+    }
+    
+    /* Masquer les icônes par défaut */
+    .fc .fc-icon-chevron-left,
+    .fc .fc-icon-chevron-right {
+      display: none;
+    }
+    
+    /* Ajouter nos propres chevrons */
+    .fc .fc-prev-button::after {
+      content: "<";
+      font-size: 1.2em;
+    }
+    
+    .fc .fc-next-button::after {
+      content: ">";
+      font-size: 1.2em;
+    }
+    
+    /* Légende */
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-bottom: 20px;
+      padding: 10px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      background-color: #f9fafb;
+    }
+    
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    
+    .legend-color {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+    }
+    
+    .legend-weekend {
+      background-color: var(--weekend-color);
+    }
+    
+    .legend-holiday {
+      background-color: var(--holiday-color);
+    }
+    
+    .legend-vacation {
+      background-color: var(--vacation-color);
+    }
+    
+    .legend-intervention {
+      background-color: var(--primary-color);
+    }
+  </style>
+</head>
+<body>
+  <h1>Chronogramme</h1>
+  
+  <div class="form-container">
+    <div class="form-group">
+      <label for="start-date">Date de démarrage</label>
+      <input type="date" id="start-date" required>
+    </div>
+    
+    <div class="form-group">
+      <label for="total-hours">Heures totales sur le projet</label>
+      <input type="number" id="total-hours" min="0" step="0.25" value="100">
+    </div>
+    
+    <div class="form-group">
+      <label for="daily-capacity">Capacité journalière (h)</label>
+      <input type="number" id="daily-capacity" min="1" step="0.25" value="7">
+    </div>
+  </div>
+  
+  <div class="legend">
+    <div class="legend-item">
+      <div class="legend-color legend-weekend"></div>
+      <span>Week-ends</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-color legend-holiday"></div>
+      <span>Jours fériés</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-color legend-vacation"></div>
+      <span>Congés d'août (3 premières semaines)</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-color legend-intervention"></div>
+      <span>Jours d'intervention</span>
+    </div>
+  </div>
+  
+  <div class="summary" id="summary">
+    Veuillez remplir les champs ci-dessus pour générer le chronogramme.
+  </div>
+  
+  <div class="calendar-container" id="calendar"></div>
+  
+  <script>
+    // Initialiser dayjs
+    dayjs.locale('fr');
+    dayjs.extend(window.dayjs_plugin_weekday);
+    dayjs.extend(window.dayjs_plugin_isSameOrBefore);
+    dayjs.extend(window.dayjs_plugin_isBetween);
+    
+    // Éléments DOM
+    const startDateInput = document.getElementById('start-date');
+    const totalHoursInput = document.getElementById('total-hours');
+    const dailyCapacityInput = document.getElementById('daily-capacity');
+    const summaryElement = document.getElementById('summary');
+    const calendarEl = document.getElementById('calendar');
+    
+    // Définir la date par défaut à aujourd'hui
+    startDateInput.valueAsDate = new Date();
+    
+    // Jours fériés français pour 2025, 2026, 2027
+    const frenchHolidays = {
+      2025: [
+        '2025-01-01', '2025-04-21', '2025-05-01', '2025-05-08', '2025-05-29', 
+        '2025-06-09', '2025-07-14', '2025-08-15', '2025-11-01', '2025-11-11', '2025-12-25'
+      ],
+      2026: [
+        '2026-01-01', '2026-04-06', '2026-05-01', '2026-05-08', '2026-05-14', 
+        '2026-05-25', '2026-07-14', '2026-08-15', '2026-11-01', '2026-11-11', '2026-12-25'
+      ],
+      2027: [
+        '2027-01-01', '2027-03-29', '2027-05-01', '2027-05-08', '2027-05-06', 
+        '2027-05-17', '2027-07-14', '2027-08-15', '2027-11-01', '2027-11-11', '2027-12-25'
+      ]
+    };
+    
+    // Vérifier si une date est un jour férié
+    function isHoliday(date) {
+      const year = date.getFullYear();
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const day = date.getDate().toString().padStart(2, '0');
+      const dateStr = `${year}-${month}-${day}`;
+      
+      return frenchHolidays[year] && frenchHolidays[year].includes(dateStr);
+    }
+    
+    // Vérifier si une date est un week-end
+    function isWeekend(date) {
+      const day = date.getDay();
+      return day === 0 || day === 6; // 0 = Dimanche, 6 = Samedi
+    }
+    
+    // Vérifier si une date est dans les 3 premières semaines d'août
+    function isAugustVacation(date) {
+      const month = date.getMonth(); // 0-11, donc août = 7
+      const day = date.getDate();
+      
+      return month === 7 && day <= 21; // Août (mois 7) du 1er au 21
+    }
+    
+    // Vérifier si une date est un jour ouvré
+    function isWorkingDay(date) {
+      return !isWeekend(date) && !isHoliday(date) && !isAugustVacation(date);
+    }
+    
+    // Trouver le prochain jour ouvré
+    function findNextWorkingDay(date) {
+      let nextDay = new Date(date);
+      while (!isWorkingDay(nextDay)) {
+        nextDay.setDate(nextDay.getDate() + 1);
+      }
+      return nextDay;
+    }
+    
+    // Formater la date en JJ/MM/AAAA
+    function formatDate(date) {
+      const day = date.getDate().toString().padStart(2, '0');
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const year = date.getFullYear();
+      return `${day}/${month}/${year}`;
+    }
+    
+    // Générer les événements pour FullCalendar
+    function generateEvents(startDate, totalHours, dailyCapacity) {
+      // Valider les entrées
+      if (!startDate || !totalHours || !dailyCapacity) {
+        return [];
+      }
+      
+      // Calculer le nombre de jours nécessaires
+      const numDays = Math.ceil(totalHours / dailyCapacity);
+      
+      // Trouver le premier jour ouvré
+      let currentDate = findNextWorkingDay(startDate);
+      const firstDate = new Date(currentDate);
+      
+      // Générer les événements
+      const events = [];
+      let daysCount = 0;
+      
+      while (daysCount < numDays) {
+        if (isWorkingDay(currentDate)) {
+          const year = currentDate.getFullYear();
+          const month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
+          const day = currentDate.getDate().toString().padStart(2, '0');
+          
+          events.push({
+            title: `Intervention (${daysCount + 1}/${numDays})`,
+            start: `${year}-${month}-${day}`,
+            allDay: true,
+            backgroundColor: '#4f46e5',
+            borderColor: '#4f46e5'
+          });
+          daysCount++;
+        }
+        
+        // Passer au jour suivant
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+      
+      // Dernier jour ouvré
+      const lastDate = new Date(currentDate);
+      lastDate.setDate(lastDate.getDate() - 1);
+      
+      // Mettre à jour le récapitulatif
+      updateSummary(firstDate, lastDate, numDays, dailyCapacity, totalHours);
+      
+      return events;
+    }
+    
+    // Mettre à jour le texte du récapitulatif
+    function updateSummary(firstDate, lastDate, numDays, dailyCapacity, totalHours) {
+      const summaryText = `Du ${formatDate(firstDate)} au ${formatDate(lastDate)} – ${numDays} jours ouvrés – Capacité : ${dailyCapacity} h/j – Heures totales : ${totalHours} h`;
+      summaryElement.textContent = summaryText;
+    }
+    
+    // Initialiser le calendrier
+    let calendar;
+    
+    function initCalendar() {
+      calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        headerToolbar: {
+          left: 'prev,next today',
+          center: 'title',
+          right: 'dayGridMonth,dayGridWeek'
+        },
+        locale: 'fr',
+        firstDay: 1, // Lundi
+        height: 'auto',
+        buttonText: {
+          today: "Aujourd'hui",
+          month: 'Mois',
+          week: 'Semaine'
+        },
+        dayRender: function(info) {
+          // Cette fonction est appelée pour chaque jour du calendrier
+          const date = info.date;
+          
+          if (isHoliday(date)) {
+            info.el.classList.add('fc-day-holiday');
+          }
+          
+          if (isWeekend(date)) {
+            info.el.classList.add('fc-day-weekend');
+          }
+          
+          if (isAugustVacation(date)) {
+            info.el.classList.add('fc-day-vacation');
+          }
+        },
+        eventDidMount: function(info) {
+          // Ajouter une infobulle
+          info.el.title = info.event.title;
+        }
+      });
+      
+      // Remplacer les boutons de navigation par des chevrons
+      calendar.render();
+      
+      // Personnaliser les boutons après le rendu
+      customizeNavigationButtons();
+      
+      // Appliquer les classes aux cellules du calendrier
+      applyCalendarCellClasses();
+      
+      updateCalendar();
+    }
+    
+    // Appliquer les classes aux cellules du calendrier
+    function applyCalendarCellClasses() {
+      // Sélectionner toutes les cellules de date
+      const dateCells = document.querySelectorAll('.fc-daygrid-day');
+      
+      dateCells.forEach(cell => {
+        // Obtenir la date de la cellule
+        const dateAttr = cell.getAttribute('data-date');
+        if (!dateAttr) return;
+        
+        // Convertir en objet Date
+        const [year, month, day] = dateAttr.split('-').map(Number);
+        const date = new Date(year, month - 1, day);
+        
+        // Appliquer les classes appropriées
+        if (isHoliday(date)) {
+          cell.classList.add('fc-day-holiday');
+        }
+        
+        if (isWeekend(date)) {
+          cell.classList.add('fc-day-weekend');
+        }
+        
+        if (isAugustVacation(date)) {
+          cell.classList.add('fc-day-vacation');
+        }
+      });
+    }
+    
+    // Personnaliser les boutons de navigation
+    function customizeNavigationButtons() {
+      // Remplacer les boutons de navigation par des chevrons
+      const prevButton = document.querySelector('.fc-prev-button');
+      const nextButton = document.querySelector('.fc-next-button');
+      
+      if (prevButton) {
+        prevButton.innerHTML = '<span>&lt;</span>';
+      }
+      
+      if (nextButton) {
+        nextButton.innerHTML = '<span>&gt;</span>';
+      }
+    }
+    
+    // Mettre à jour le calendrier avec de nouveaux événements
+    function updateCalendar() {
+      const startDateValue = startDateInput.value;
+      const totalHours = parseFloat(totalHoursInput.value);
+      const dailyCapacity = parseFloat(dailyCapacityInput.value);
+      
+      if (!startDateValue || isNaN(totalHours) || isNaN(dailyCapacity)) {
+        return;
+      }
+      
+      const startDate = new Date(startDateValue);
+      const events = generateEvents(startDate, totalHours, dailyCapacity);
+      
+      if (calendar) {
+        calendar.removeAllEvents();
+        calendar.addEventSource(events);
+        
+        // Aller à la date de début
+        const firstWorkingDay = findNextWorkingDay(startDate);
+        calendar.gotoDate(firstWorkingDay);
+        
+        // Réappliquer les chevrons après la navigation
+        customizeNavigationButtons();
+        
+        // Réappliquer les classes aux cellules
+        setTimeout(applyCalendarCellClasses, 100);
+      }
+    }
+    
+    // Écouteurs d'événements pour les changements de mois/semaine
+    document.addEventListener('click', function(e) {
+      if (e.target.closest('.fc-prev-button') || e.target.closest('.fc-next-button') || 
+          e.target.closest('.fc-today-button')) {
+        setTimeout(function() {
+          applyCalendarCellClasses();
+          customizeNavigationButtons();
+        }, 100);
+      }
+    });
+    
+    // Écouteurs d'événements pour les inputs
+    startDateInput.addEventListener('change', updateCalendar);
+    totalHoursInput.addEventListener('input', updateCalendar);
+    dailyCapacityInput.addEventListener('input', updateCalendar);
+    
+    // Initialiser le calendrier lorsque le DOM est chargé
+    document.addEventListener('DOMContentLoaded', initCalendar);
+    
+    // Au cas où le DOMContentLoaded a déjà été déclenché
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+      setTimeout(function() {
+        initCalendar();
+      }, 1);
+    }
+  </script>
+</body>
+</html>
